@@ -1,0 +1,2 @@
+getHumedad	KEYWORD1
+Humedad	KEYWORD2
