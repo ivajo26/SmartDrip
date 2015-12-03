@@ -25,6 +25,8 @@ void loop(){
   Serial.print(sensorH.getPromedio());
   Serial.print(",");
   Serial.print(sensorT.getTemperature());
+  Serial.print(",");
+  Serial.print(valvula_estado);
   Serial.print(":");
   if (sensorH.getPromedio() <= 300){
     if(valvula_estado!=true){
