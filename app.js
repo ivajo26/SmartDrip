@@ -1,11 +1,46 @@
 var express = require('express'),
     app = express(),
+    router = express.Router(),
     http = require('http').Server(app),
     io = require('socket.io')(http),
-    fs = require('fs'),
-    path = require('path'),
+    mongo = require('mongoose'),
+    crossroads = require('crossroads'),
+    schema = mongo.Schema,
+    swig = require('swig'),
 		serialport = require('serialport'),
 		SerialPort = serialport.SerialPort;
+
+mongo.connect('mongodb://localhost/smartdripdb');
+
+var riegoSchema = new schema({
+  created_at: Date,
+  sensor1: Number,
+  sensor2: Number,
+  sensor3: Number,
+  sensor4: Number,
+  temperature: Number,
+  estado: Number
+});
+
+var Riego = mongo.model('Riego', riegoSchema);
+
+
+swig.setDefaults({
+	cache : 'memory'
+});
+
+app.engine('html', swig.renderFile);
+app.set('view engine', 'html');
+app.set('views', './app/views');
+
+app.use( express.static(__dirname + '/public') );
+app.use(router)
+
+// Calling routers
+var homeRouter = require('./app/routers/home')
+homeRouter(router)
+
+
 var CultivoClass = function (){
   this.Moistures = [];
   this.Temperature=0;
@@ -23,43 +58,50 @@ CultivoClass.prototype.getPromedio = function(value) {return this.Promedio;}
 CultivoClass.prototype.setEstado_Bombeo = function (value) {this.Estado_Bombeo = value;}
 CultivoClass.prototype.getEstado_Bombeo = function(value) {return this.Estado_Bombeo;}
 CultivoClass.prototype.saveDataBase = function(){
-    Cultivo.insert({
-    createdAt: new Date(),
-    Moistures: this.Moistures,
-    Temperature: this.Temperature
-    });
+  var datos = new Riego({
+    created_at: new Date(),
+    sensor1: Cultivo.getMoisture(0),
+    sensor2: Cultivo.getMoisture(1),
+    sensor3: Cultivo.getMoisture(2),
+    sensor4: Cultivo.getMoisture(3),
+    temperature: Cultivo.getTemperature(),
+    estado: Cultivo.getEstado_Bombeo()
+  });
+
+  datos.save();
 
 }
 var Cultivo = new CultivoClass();
-
-app.use('/', express.static(path.join(__dirname, 'stream')));
 
 http.listen(3000, function() {
   console.log('Servidor escuchando en puerto 3000');
 });
 
-app.get('/', function(req, res) {
-  res.sendFile(__dirname + '/view/index.html');
-});
+for (var i = 0; i < 4; i++) {
+  Cultivo.setMoisture(i,i);
+}
+Cultivo.setPromedio(4);
+Cultivo.setTemperature(5);
+Cultivo.setEstado_Bombeo(6);
 
-var sp = new SerialPort("/dev/ttyACM0",{
-	baudrate: 9600,
-	parser: serialport.parsers.readline(":")
-});
-
-sp.open(function(){
-	sp.on("data", function(data){
-		var string = data;
-		// delimit using the , to separate every value
-		var res = string.split(",");
-    for (var i = 0; i < 4; i++) {
-      Cultivo.setMoisture(i,res[i]);
-    }
-    Cultivo.setPromedio(res[4]);
-    Cultivo.setTemperature(res[5]);
-    Cultivo.setEstado_Bombeo(res[6]);
-	});
-});
+// var sp = new SerialPort("/dev/ttyACM0",{
+// 	baudrate: 9600,
+// 	parser: serialport.parsers.readline(":")
+// });
+//
+// sp.open(function(){
+// 	sp.on("data", function(data){
+// 		var string = data;
+// 		// delimit using the , to separate every value
+// 		var res = string.split(",");
+//     for (var i = 0; i < 4; i++) {
+//       Cultivo.setMoisture(i,res[i]);
+//     }
+//     Cultivo.setPromedio(res[4]);
+//     Cultivo.setTemperature(res[5]);
+//     Cultivo.setEstado_Bombeo(res[6]);
+// 	});
+// });
 
 var sockets = {};
 
@@ -76,5 +118,6 @@ io.on('connection', function(socket) {
 
 });
 setInterval(function(){
-    io.emit('emit-m', {'s1':Cultivo.getMoisture(0),'s2':Cultivo.getMoisture(1),'s3':Cultivo.getMoisture(2),'s4':Cultivo.getMoisture(3),'tem':Cultivo.getTemperature(),'est':Cultivo.getEstado_Bombeo()});  
+    io.emit('emit-m', {'s1':Cultivo.getMoisture(0),'s2':Cultivo.getMoisture(1),'s3':Cultivo.getMoisture(2),'s4':Cultivo.getMoisture(3),'tem':Cultivo.getTemperature(),'est':Cultivo.getEstado_Bombeo()});
+    Cultivo.saveDataBase();
 }, 100);
