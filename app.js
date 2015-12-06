@@ -1,7 +1,7 @@
 var express = require('express'),
     app = express(),
     router = express.Router(),
-    http = require('http').Server(app),
+    http = require('http').createServer(app),
     io = require('socket.io')(http),
     mongo = require('mongoose'),
     crossroads = require('crossroads'),
@@ -34,11 +34,11 @@ app.set('view engine', 'html');
 app.set('views', './app/views');
 
 app.use( express.static(__dirname + '/public') );
-app.use(router)
+app.use(router);
 
 // Calling routers
-var homeRouter = require('./app/routers/home')
-homeRouter(router)
+var homeRouter = require('./app/routers/home');
+homeRouter(router);
 
 
 var CultivoClass = function (){
@@ -73,9 +73,7 @@ CultivoClass.prototype.saveDataBase = function(){
 }
 var Cultivo = new CultivoClass();
 
-http.listen(3000, function() {
-  console.log('Servidor escuchando en puerto 3000');
-});
+
 
 for (var i = 0; i < 4; i++) {
   Cultivo.setMoisture(i,i);
@@ -117,7 +115,11 @@ io.on('connection', function(socket) {
   });
 
 });
+
+http.listen(3000, function() {
+  console.log('Servidor escuchando en puerto 3000');
+});
 setInterval(function(){
     io.emit('emit-m', {'s1':Cultivo.getMoisture(0),'s2':Cultivo.getMoisture(1),'s3':Cultivo.getMoisture(2),'s4':Cultivo.getMoisture(3),'tem':Cultivo.getTemperature(),'est':Cultivo.getEstado_Bombeo()});
-    Cultivo.saveDataBase();
+    // Cultivo.saveDataBase();
 }, 100);
