@@ -80,24 +80,33 @@ CultivoClass.prototype.saveDataBase = function(){
 }
 var Cultivo = new CultivoClass();
 
-var sp = new SerialPort("/dev/ttyACM0",{
-	baudrate: 9600,
-	parser: serialport.parsers.readline(":")
-});
 
-sp.open(function(){
-	sp.on("data", function(data){
-		var string = data;
-		// delimit using the , to separate every value
-		var res = string.split(",");
-    for (var i = 0; i < 4; i++) {
-      Cultivo.setMoisture(i,res[i]);
-    }
-    Cultivo.setPromedio(res[4]);
-    Cultivo.setTemperature(res[5]);
-    Cultivo.setEstado_Bombeo(res[6]);
-	});
-});
+
+for (var i = 0; i < 4; i++) {
+  Cultivo.setMoisture(i,i);
+}
+Cultivo.setPromedio(4);
+Cultivo.setTemperature(5);
+Cultivo.setEstado_Bombeo(6);
+
+// var sp = new SerialPort("/dev/ttyACM0",{
+// 	baudrate: 9600,
+// 	parser: serialport.parsers.readline(":")
+// });
+//
+// sp.open(function(){
+// 	sp.on("data", function(data){
+// 		var string = data;
+// 		// delimit using the , to separate every value
+// 		var res = string.split(",");
+//     for (var i = 0; i < 4; i++) {
+//       Cultivo.setMoisture(i,res[i]);
+//     }
+//     Cultivo.setPromedio(res[4]);
+//     Cultivo.setTemperature(res[5]);
+//     Cultivo.setEstado_Bombeo(res[6]);
+// 	});
+// });
 
 var sockets = {};
 
