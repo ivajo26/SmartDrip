@@ -10,10 +10,11 @@ var express = require('express'),
 		serialport = require('serialport'),
 		SerialPort = serialport.SerialPort;
 
-mongo.connect('mongodb://localhost/smartdripdb');
+mongo.connect('mongodb://localhost/smartdrip');
 
 var riegoSchema = new schema({
   created_at: Date,
+  timer: Number,
   sensor1: Number,
   sensor2: Number,
   sensor3: Number,
@@ -60,6 +61,7 @@ CultivoClass.prototype.getEstado_Bombeo = function(value) {return this.Estado_Bo
 CultivoClass.prototype.saveDataBase = function(){
   var datos = new Riego({
     created_at: new Date(),
+    timer: (new Date()).getTime(),
     sensor1: Cultivo.getMoisture(0),
     sensor2: Cultivo.getMoisture(1),
     sensor3: Cultivo.getMoisture(2),
@@ -114,12 +116,20 @@ io.on('connection', function(socket) {
     console.log("Clientes conectados ", Object.keys(sockets).length);
   });
 
+  Riego.find({}, function(err, datos) {
+    if (err) throw err;
+    datos
+    console.log(datos);
+    socket.emit('moistures', datos);
+  });
+  //
+
 });
 
 http.listen(3000, function() {
   console.log('Servidor escuchando en puerto 3000');
 });
 setInterval(function(){
-    io.emit('emit-m', {'s1':Cultivo.getMoisture(0),'s2':Cultivo.getMoisture(1),'s3':Cultivo.getMoisture(2),'s4':Cultivo.getMoisture(3),'tem':Cultivo.getTemperature(),'est':Cultivo.getEstado_Bombeo()});
-    // Cultivo.saveDataBase();
-}, 100);
+    io.emit('emit-m', {'s1':Cultivo.getMoisture(0),'s2':Cultivo.getMoisture(1),'s3':Cultivo.getMoisture(2),'s4':Cultivo.getMoisture(3),'tem':Cultivo.getTemperature(),'est':Cultivo.getEstado_Bombeo(),'timer':(new Date).getTime()});
+    Cultivo.saveDataBase();
+}, 1000);

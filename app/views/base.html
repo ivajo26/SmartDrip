@@ -7,11 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SmartDrip</title>
 
+
+    
     <link href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="css/material.min.css">
     <link rel="stylesheet" href="css/styles.css">
 
+    {% block addhead %}{% endblock %}
   </head>
   <body>
     <div class="demo-layout mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header">
@@ -46,11 +49,6 @@
       </main>
     </div>
     <script src="js/material.min.js"></script>
-    <script src='/socket.io/socket.io.js' charset="utf-8"></script>
-    <script charset="utf-8">
-           $(document).ready(function() {
-              var socket = io.connect();
-              socket.emit('jolo', 10);
-        </script>
+    {% block addjs %}{% endblock %}
   </body>
 </html>
