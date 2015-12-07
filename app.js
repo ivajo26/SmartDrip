@@ -39,7 +39,9 @@ app.use(router);
 
 // Calling routers
 var homeRouter = require('./app/routers/home');
+var moistureRouter = require('./app/routers/moisture');
 homeRouter(router);
+moistureRouter(router);
 
 
 var CultivoClass = function (){
@@ -118,8 +120,6 @@ io.on('connection', function(socket) {
 
   Riego.find({}, function(err, datos) {
     if (err) throw err;
-    datos
-    console.log(datos);
     socket.emit('moistures', datos);
   });
   //
