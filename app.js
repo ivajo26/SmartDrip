@@ -20,7 +20,8 @@ var riegoSchema = new schema({
   sensor3: Number,
   sensor4: Number,
   temperature: Number,
-  estado: Number
+  estado: Number,
+  promedio: Number
 });
 
 var Riego = mongo.model('Riego', riegoSchema);
@@ -40,9 +41,10 @@ app.use(router);
 // Calling routers
 var homeRouter = require('./app/routers/home');
 var moistureRouter = require('./app/routers/moisture');
+var temperatureRouter = require('./app/routers/temperature');
 homeRouter(router);
 moistureRouter(router);
-
+temperatureRouter(router);
 
 var CultivoClass = function (){
   this.Moistures = [];
@@ -64,12 +66,13 @@ CultivoClass.prototype.saveDataBase = function(){
   var datos = new Riego({
     created_at: new Date(),
     timer: (new Date()).getTime(),
-    sensor1: Cultivo.getMoisture(0),
-    sensor2: Cultivo.getMoisture(1),
-    sensor3: Cultivo.getMoisture(2),
-    sensor4: Cultivo.getMoisture(3),
-    temperature: Cultivo.getTemperature(),
-    estado: Cultivo.getEstado_Bombeo()
+    sensor1: this.Moistures[0],
+    sensor2: this.Moistures[1],
+    sensor3: this.Moistures[2],
+    sensor4: this.Moistures[3],
+    temperature: this.Temperature,
+    estado: this.Estado_Bombeo,
+    promedio: this.Promedio
   });
 
   datos.save();
@@ -77,33 +80,24 @@ CultivoClass.prototype.saveDataBase = function(){
 }
 var Cultivo = new CultivoClass();
 
+var sp = new SerialPort("/dev/ttyACM0",{
+	baudrate: 9600,
+	parser: serialport.parsers.readline(":")
+});
 
-
-for (var i = 0; i < 4; i++) {
-  Cultivo.setMoisture(i,i);
-}
-Cultivo.setPromedio(4);
-Cultivo.setTemperature(5);
-Cultivo.setEstado_Bombeo(6);
-
-// var sp = new SerialPort("/dev/ttyACM0",{
-// 	baudrate: 9600,
-// 	parser: serialport.parsers.readline(":")
-// });
-//
-// sp.open(function(){
-// 	sp.on("data", function(data){
-// 		var string = data;
-// 		// delimit using the , to separate every value
-// 		var res = string.split(",");
-//     for (var i = 0; i < 4; i++) {
-//       Cultivo.setMoisture(i,res[i]);
-//     }
-//     Cultivo.setPromedio(res[4]);
-//     Cultivo.setTemperature(res[5]);
-//     Cultivo.setEstado_Bombeo(res[6]);
-// 	});
-// });
+sp.open(function(){
+	sp.on("data", function(data){
+		var string = data;
+		// delimit using the , to separate every value
+		var res = string.split(",");
+    for (var i = 0; i < 4; i++) {
+      Cultivo.setMoisture(i,res[i]);
+    }
+    Cultivo.setPromedio(res[4]);
+    Cultivo.setTemperature(res[5]);
+    Cultivo.setEstado_Bombeo(res[6]);
+	});
+});
 
 var sockets = {};
 
@@ -130,6 +124,6 @@ http.listen(3000, function() {
   console.log('Servidor escuchando en puerto 3000');
 });
 setInterval(function(){
-    io.emit('emit-m', {'s1':Cultivo.getMoisture(0),'s2':Cultivo.getMoisture(1),'s3':Cultivo.getMoisture(2),'s4':Cultivo.getMoisture(3),'tem':Cultivo.getTemperature(),'est':Cultivo.getEstado_Bombeo(),'timer':(new Date).getTime()});
+    io.emit('emit-m', {'s1':Cultivo.getMoisture(0),'s2':Cultivo.getMoisture(1),'s3':Cultivo.getMoisture(2),'s4':Cultivo.getMoisture(3),'tem':Cultivo.getTemperature(),'est':Cultivo.getEstado_Bombeo(),'timer':(new Date).getTime(),'promedio': Cultivo.getPromedio()});
     Cultivo.saveDataBase();
 }, 1000);
