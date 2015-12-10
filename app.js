@@ -91,11 +91,11 @@ sp.open(function(){
 		// delimit using the , to separate every value
 		var res = string.split(",");
     for (var i = 0; i < 4; i++) {
-      Cultivo.setMoisture(i,res[i]);
+      Cultivo.setMoisture(i,parseInt(res[i]));
     }
-    Cultivo.setPromedio(res[4]);
-    Cultivo.setTemperature(res[5]);
-    Cultivo.setEstado_Bombeo(res[6]);
+    Cultivo.setPromedio(parseInt(res[4]));
+    Cultivo.setTemperature(parseInt(res[5])*(-1));
+    Cultivo.setEstado_Bombeo(parseInt(res[6]));
 	});
 });
 
