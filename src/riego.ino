@@ -5,7 +5,7 @@ Humedad sensorH = Humedad(A0,A1,A2,A3);
 int relay = 12;
 Temperature sensorT = Temperature(A4);
 bool valvula_estado = false;
-unsigned long tiempo_de_bombeo = 3000;
+unsigned long tiempo_de_bombeo = 50000;
 unsigned long tiempo_de_cierre = 0 ;
 
 void setup(){
@@ -28,7 +28,7 @@ void loop(){
   Serial.print(",");
   Serial.print(valvula_estado);
   Serial.print(":");
-  if (sensorH.getPromedio() <= 400){
+  if (sensorH.getPromedio() <= 600){
     if(valvula_estado!=true){
       digitalWrite(relay,HIGH);
       tiempo_de_cierre = millis()+tiempo_de_bombeo;
