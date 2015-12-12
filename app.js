@@ -93,9 +93,13 @@ sp.open(function(){
     for (var i = 0; i < 4; i++) {
       Cultivo.setMoisture(i,parseInt(res[i]));
     }
-    if(res[5]<0){res[5]*=(-1)}
+    if(parseInt(res[5])<0){
+      Cultivo.setTemperature(parseInt(res[5])*(-1));
+    }else {
+      Cultivo.setTemperature(parseInt(res[5]);
+    }
     Cultivo.setPromedio(parseInt(res[4]));
-    Cultivo.setTemperature(parseInt(res[5]);
+
     Cultivo.setEstado_Bombeo(parseInt(res[6]));
 	});
 });
